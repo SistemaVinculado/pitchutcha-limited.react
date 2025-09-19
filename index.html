@@ -1,13 +1,136 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
+    <title>Pitchutcha | A Alternativa de Código Aberto ao Firebase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      /* Apply Fonts */
+      body {
+        font-family: 'Figtree', sans-serif;
+      }
+      pre, code, .font-mono {
+        font-family: 'Source Code Pro', monospace;
+      }
+
+      /* Custom scrollbar for a more refined look */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1a1a1a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #333;
+        border-radius: 10px;
+        border: 2px solid #1a1a1a;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #555;
+      }
+
+      /* For Hero aurora effect */
+      .hero-aurora {
+        position: relative;
+      }
+      .hero-aurora::before {
+        content: '';
+        position: absolute;
+        inset: -200px;
+        pointer-events: none;
+        background: radial-gradient(
+          600px circle at var(--mouse-x) var(--mouse-y),
+          rgba(50, 205, 50, 0.15),
+          transparent 40%
+        );
+        z-index: 0;
+        opacity: 0;
+        transition: opacity 300ms ease-in-out;
+      }
+      .hero-aurora:hover::before {
+          opacity: 1;
+      }
+
+      @keyframes marquee {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-100%); }
+      }
+      .animate-marquee {
+        animation: marquee 40s linear infinite;
+      }
+      
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .animate-blink {
+        animation: blink 1s step-end infinite;
+      }
+
+      /* For animated gradient border */
+      @property --angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+      }
+
+      @keyframes rotation {
+        0% { --angle: 0deg; }
+        100% { --angle: 360deg; }
+      }
+
+      .gradient-border::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        z-index: -1;
+        border-radius: 0.75rem; /* 12px */
+        background: conic-gradient(
+          from var(--angle),
+          #1c1c1c,
+          #10b981,
+          #34d399,
+          #10b981,
+          #1c1c1c 50%
+        );
+        animation: rotation 4s linear infinite;
+        opacity: 0;
+        transition: opacity 300ms ease-in-out;
+      }
+
+      .group:hover .gradient-border::before {
+        opacity: 1;
+      }
+
+      /* For animated globe paths */
+      @keyframes draw-line {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      .globe-path {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: draw-line 2s ease-in-out forwards;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-[#111111] text-white">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -1,0 +1,5 @@
+{
+  "name": "Pitchutcha",
+  "description": "Uma réplica da página inicial do Supabase, construída com React, TypeScript e Tailwind CSS. Pitchutcha é a alternativa de código aberto ao Firebase.",
+  "requestFramePermissions": []
+}
