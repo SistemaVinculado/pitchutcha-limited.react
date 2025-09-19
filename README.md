@@ -1,1 +1,0 @@
-# pitchutcha-limited.react
