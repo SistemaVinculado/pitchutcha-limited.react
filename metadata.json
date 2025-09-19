@@ -1,5 +1,5 @@
 {
   "name": "Pitchutcha",
-  "description": "Uma réplica da página inicial do Supabase, construída com React, TypeScript e Tailwind CSS. Pitchutcha é a alternativa de código aberto ao Firebase.",
+  "description": "Uma réplica da página inicial do Supabase, reimaginada com um stack de frontend de ponta. Construída com React, TypeScript, Tailwind CSS, e animada com Framer Motion e GSAP. Apresenta smooth scrolling via Lenis e adota a filosofia de design de componentes do Shadcn/ui para uma UI/UX impecável.",
   "requestFramePermissions": []
 }

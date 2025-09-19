@@ -1,37 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
     ArrowRightIcon, PostGisIcon, PgCronIcon, PgNetIcon, PgGraphqlIcon, PlayIcon
 } from './constants';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Custom Hook for animations on scroll
-const useOnScreen = <T extends Element,>(options?: IntersectionObserverInit): [React.RefObject<T>, boolean] => {
-    const ref = useRef<T>(null);
-    const [isVisible, setIsVisible] = useState(false);
+gsap.registerPlugin(ScrollTrigger);
 
-    useEffect(() => {
-        const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) {
-                setIsVisible(true);
-                if (ref.current) {
-                    observer.unobserve(ref.current);
-                }
-            }
-        }, options);
-
-        if (ref.current) {
-            observer.observe(ref.current);
-        }
-
-        return () => {
-            if (ref.current) {
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-                observer.unobserve(ref.current);
-            }
-        };
-    }, [ref, options]);
-
-    return [ref, isVisible];
-};
 
 interface AnimatedSectionProps {
     children: React.ReactNode;
@@ -40,67 +15,39 @@ interface AnimatedSectionProps {
 }
 
 export const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children, className = '', delay = 0 }) => {
-    const [ref, isVisible] = useOnScreen<HTMLDivElement>({ threshold: 0.1 });
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (el) {
+            // Set initial state
+            gsap.set(el, { opacity: 0, y: 50 });
+
+            // Create animation
+            ScrollTrigger.create({
+                trigger: el,
+                start: 'top 85%',
+                end: 'bottom 15%',
+                onEnter: () => {
+                    gsap.to(el, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1.2,
+                        delay: delay / 1000,
+                        ease: 'power3.out',
+                    });
+                },
+                once: true, // Animation will only play once
+            });
+        }
+    }, [delay]);
+
     return (
-        <div
-            ref={ref}
-            className={`transition-all duration-1000 ${className} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-            style={{ transitionDelay: `${delay}ms` }}
-        >
+        <div ref={ref} className={className} style={{ opacity: 0 }}>
             {children}
         </div>
     );
 };
-
-export const useTypingAnimation = (commands: string[], loop: boolean = true) => {
-    const [lines, setLines] = useState<string[]>([]);
-    const [currentLine, setCurrentLine] = useState('');
-    const [commandIndex, setCommandIndex] = useState(0);
-
-    const runAnimation = useCallback(() => {
-        setLines([]);
-        setCurrentLine('');
-        setCommandIndex(0);
-        let currentLines: string[] = [];
-
-        const typeCommand = (index: number) => {
-            if (index >= commands.length) {
-                if(loop) {
-                    setTimeout(runAnimation, 2000);
-                }
-                return;
-            }
-
-            const command = commands[index];
-            if (command.startsWith('✔')) {
-                currentLines.push(command);
-                setLines([...currentLines]);
-                typeCommand(index + 1);
-            } else {
-                let charIndex = 0;
-                const interval = setInterval(() => {
-                    setCurrentLine(command.substring(0, charIndex + 1));
-                    charIndex++;
-                    if (charIndex === command.length) {
-                        clearInterval(interval);
-                        currentLines.push(command);
-                        setLines([...currentLines]);
-                        setCurrentLine('');
-                        setTimeout(() => typeCommand(index + 1), 500);
-                    }
-                }, 50);
-            }
-        };
-
-        typeCommand(0);
-    }, [commands, loop]);
-    
-    useEffect(() => {
-        runAnimation();
-    }, [runAnimation]);
-
-    return { lines, currentLine };
-}
 
 export const ExtensionsSection: React.FC = () => {
     const extensions = [

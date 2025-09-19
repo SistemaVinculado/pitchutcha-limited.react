@@ -1,133 +1,116 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Lenis from 'lenis';
+import { gsap } from 'gsap';
+import { TextPlugin } from 'gsap/TextPlugin';
 import { 
     DatabaseIcon, AuthIcon, StorageIcon, EdgeFunctionsIcon, RealtimeIcon, VectorIcon,
     ReactLogo, VueLogo, SvelteLogo, AngularLogo, NextLogo, NuxtLogo, GitHubIcon,
-    ArrowRightIcon, CheckIcon, StarIcon, ChevronDownIcon, MenuIcon, XIcon,
+    ArrowRightIcon, CheckIcon, StarIcon, ChevronDownIcon,
     PitchutchaLogo, VercelLogo, StripeLogo, DiscordLogo, NotionLogo, PlayIcon,
-    SearchIcon, GlobeAltIcon, BookOpenIcon, TagIcon, SparklesIcon, CommandLineIcon,
+    GlobeAltIcon, BookOpenIcon, SparklesIcon,
     FirebaseLogo, CheckCircleIcon, XCircleIcon, ClipboardIcon, ClipboardCheckIcon,
-    RocketLaunchIcon, ChatBubbleLeftRightIcon, ShoppingCartIcon, QuoteIcon
+    RocketLaunchIcon, ChatBubbleLeftRightIcon, ShoppingCartIcon, QuoteIcon,
+    CodeBracketSquareIcon, TableCellsIcon, ShieldCheckIcon, CubeTransparentIcon
 } from './constants';
 import DatabasePage from './DatabasePage';
-import { AnimatedSection, useTypingAnimation, ExtensionsSection, CTASection } from './shared';
+import DocsPortal from './DocsPortal';
+import DocsPage from './DocsPage';
+import StatusPage from './StatusPage';
+import { AnimatedSection, ExtensionsSection, CTASection } from './shared';
+import GlobalLayout from './GlobalLayout';
+
+gsap.registerPlugin(TextPlugin);
 
 // --- Sub-Components ---
-const SyntaxHighlighter: React.FC<{ code: React.ReactNode }> = ({ code }) => (
-    <pre className="whitespace-pre-wrap">
-        <code className="text-zinc-300">
-            {code}
-        </code>
-    </pre>
-);
+const SyntaxHighlighter: React.FC<{ code: string }> = ({ code }) => {
+    const highlightedCode = useMemo(() => {
+        let tempCode = code;
+        // Simulação de um syntax highlighter como Shiki/Rehype.
+        // Em um projeto real, uma biblioteca seria usada para uma análise robusta.
+        tempCode = tempCode.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        tempCode = tempCode.replace(/(\/\/.+)/g, '<span class="text-gray-500">$1</span>');
+        tempCode = tempCode.replace(/('.*?'|`.*?`)/g, '<span class="text-green-400">$1</span>');
+        tempCode = tempCode.replace(/\b(import|from|export|const|let|var|async|await|new|return|if|else|in|of|for|while|switch|case|break|continue|function|=>|throw|try|catch|finally)\b/g, '<span class="text-purple-400">$1</span>');
+        tempCode = tempCode.replace(/\b(true|false|null|undefined)\b/g, '<span class="text-red-400">$1</span>');
+        tempCode = tempCode.replace(/([a-zA-Z_]\w*)\s*\(/g, '<span class="text-yellow-400">$1</span>(');
+        tempCode = tempCode.replace(/(\b[A-Z][a-zA-Z_]\w*\b)/g, '<span class="text-cyan-400">$1</span>');
+        tempCode = tempCode.replace(/({|}|[|]|,|\.|:|;)/g, '<span class="text-zinc-400">$1</span>');
+        return tempCode;
+    }, [code]);
+
+    return (
+        <pre className="whitespace-pre-wrap">
+            <code className="text-zinc-300" dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+        </pre>
+    );
+};
 
 const codeSamples = {
-    database: {
-        jsx: (
-            <>
-              <span className="text-gray-500">// Crie um cliente para se conectar ao seu Pitchutcha DB</span><br />
-              <span className="text-purple-400">import</span> {'{ createClient }'} <span className="text-purple-400">from</span> <span className="text-green-400">'@pitchutcha/pitchutcha-js'</span><br />
-              <span className="text-blue-400">const</span> pitchutcha = <span className="text-yellow-400">createClient</span>(pitchutchaUrl, pitchutchaKey)<br />
-              <br />
-              <span className="text-gray-500">// Obtenha dados da sua tabela 'paises'</span><br />
-              <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha<br />
-              {'  '}.<span className="text-yellow-400">from</span>(<span className="text-green-400">'paises'</span>)<br />
-              {'  '}.<span className="text-yellow-400">select</span>()
-            </>
-        ),
-        text: `// Crie um cliente para se conectar ao seu Pitchutcha DB\nimport { createClient } from '@pitchutcha/pitchutcha-js'\nconst pitchutcha = createClient(pitchutchaUrl, pitchutchaKey)\n\n// Obtenha dados da sua tabela 'paises'\nconst { data, error } = await pitchutcha\n  .from('paises')\n  .select()`
-    },
-    auth: {
-        jsx: (
-            <>
-              <span className="text-gray-500">// Crie um novo usuário</span><br/>
-              <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha.auth.<span className="text-yellow-400">signUp</span>({'{'}<br/>
-              {'  '}email: <span className="text-green-400">'example@email.com'</span>,<br/>
-              {'  '}password: <span className="text-green-400">'example-password'</span>,<br/>
-              {'})'}<br/>
-              <br/>
-              <span className="text-gray-500">// Faça login com um usuário existente</span><br/>
-              <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha.auth.<span className="text-yellow-400">signInWithPassword</span>({'{'}<br/>
-              {'  '}email: <span className="text-green-400">'example@email.com'</span>,<br/>
-              {'  '}password: <span className="text-green-400">'example-password'</span>,<br/>
-              {'})'}
-            </>
-        ),
-        text: `// Crie um novo usuário\nconst { data, error } = await pitchutcha.auth.signUp({\n  email: 'example@email.com',\n  password: 'example-password',\n})\n\n// Faça login com um usuário existente\nconst { data, error } = await pitchutcha.auth.signInWithPassword({\n  email: 'example@email.com',\n  password: 'example-password',\n})`
-    },
-    storage: {
-        jsx: (
-            <>
-                <span className="text-gray-500">// Faça upload de um arquivo para um bucket</span><br/>
-                <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha<br/>
-                {'  '}.storage<br/>
-                {'  '}.<span className="text-yellow-400">from</span>(<span className="text-green-400">'avatares'</span>)<br/>
-                {'  '}.<span className="text-yellow-400">upload</span>(<span className="text-green-400">'public/avatar1.png'</span>, file)<br/>
-                <br/>
-                <span className="text-gray-500">// Faça o download de um arquivo</span><br/>
-                <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha<br/>
-                {'  '}.storage<br/>
-                {'  '}.<span className="text-yellow-400">from</span>(<span className="text-green-400">'avatares'</span>)<br/>
-                {'  '}.<span className="text-yellow-400">download</span>(<span className="text-green-400">'public/avatar1.png'</span>)
-            </>
-        ),
-        text: `// Faça upload de um arquivo para um bucket\nconst { data, error } = await pitchutcha\n  .storage\n  .from('avatares')\n  .upload('public/avatar1.png', file)\n\n// Faça o download de um arquivo\nconst { data, error } = await pitchutcha\n  .storage\n  .from('avatares')\n  .download('public/avatar1.png')`
-    },
-    edge_functions: {
-        jsx: (
-            <>
-                <span className="text-purple-400">import</span> {'{ serve }'} <span className="text-purple-400">from</span> <span className="text-green-400">'https://deno.land/std/http/server.ts'</span><br/>
-                <br/>
-                <span className="text-yellow-400">serve</span>(<span className="text-blue-400">async</span> (req) {'=>'} {'{'}<br/>
-                {'  '}<span className="text-blue-400">const</span> {'{ name }'} = <span className="text-purple-400">await</span> req.<span className="text-yellow-400">json</span>()<br/>
-                {'  '}<span className="text-blue-400">const</span> data = {'{'}<br/>
-                {'    '}message: <span className="text-green-400">`Olá {'${name}'}!`</span>,<br/>
-                {'  '}{'}'}<br/>
-                <br/>
-                {'  '}<span className="text-purple-400">return new</span> <span className="text-cyan-400">Response</span>(<br/>
-                {'    '}JSON.<span className="text-yellow-400">stringify</span>(data),<br/>
-                {'    '}<span>{'{ headers: { "Content-Type": "application/json" } }'}</span>,<br/>
-                {'  '})<br/>
-                {'}'})
-            </>
-        ),
-        text: `import { serve } from 'https://deno.land/std/http/server.ts'\n\nserve(async (req) => {\n  const { name } = await req.json()\n  const data = {\n    message: \`Olá \${name}!\`,\n  }\n\n  return new Response(\n    JSON.stringify(data),\n    { headers: { "Content-Type": "application/json" } },\n  )\n})`
-    },
-    realtime: {
-        jsx: (
-            <>
-              <span className="text-gray-500">// Ouça mudanças em tempo real</span><br/>
-              <span className="text-blue-400">const</span> canal = pitchutcha.<span className="text-yellow-400">channel</span>(<span className="text-green-400">'qualquer'</span>)<br/>
-              {'  '}.<span className="text-yellow-400">on</span>(<br/>
-              {'    '}<span className="text-green-400">'postgres_changes'</span>,<br/>
-              {'    '}{'{'} event: <span className="text-green-400">'*'</span>, schema: <span className="text-green-400">'public'</span>, table: <span className="text-green-400">'mensagens'</span> {'}'},<br/>
-              {'    '}(payload) {'=>'} {'{'}<br/>
-              {'      '}console.<span className="text-yellow-400">log</span>(<span className="text-green-400">'Mudança recebida!'</span>, payload)<br/>
-              {'    '}{'}'}<br/>
-              {'  '})<br/>
-              {'  '}.<span className="text-yellow-400">subscribe</span>()
-            </>
-        ),
-        text: `// Ouça mudanças em tempo real\nconst canal = pitchutcha.channel('qualquer')\n  .on(\n    'postgres_changes',\n    { event: '*', schema: 'public', table: 'mensagens' },\n    (payload) => {\n      console.log('Mudança recebida!', payload)\n    }\n  )\n  .subscribe()`
-    },
-    vector: {
-        jsx: (
-            <>
-                <span className="text-gray-500">// Gere embeddings</span><br/>
-                <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha.functions.<span className="text-yellow-400">invoke</span>(<span className="text-green-400">'embed'</span>, {'{'}<br/>
-                {'  '}inputText: <span className="text-green-400">'Olá Mundo'</span><br/>
-                {'})'}<br/>
-                <br/>
-                <span className="text-gray-500">// Faça uma busca por similaridade</span><br/>
-                <span className="text-blue-400">const</span> {'{ data, error }'} = <span className="text-purple-400">await</span> pitchutcha.<span className="text-yellow-400">rpc</span>(<span className="text-green-400">'match_documents'</span>, {'{'}<br/>
-                {'  '}query_embedding: embedding,<br/>
-                {'  '}match_threshold: 0.78,<br/>
-                {'  '}match_count: 10,<br/>
-                {'})'}
-            </>
-        ),
-        text: `// Gere embeddings\nconst { data, error } = await pitchutcha.functions.invoke('embed', {\n  inputText: 'Olá Mundo'\n})\n\n// Faça uma busca por similaridade\nconst { data, error } = await pitchutcha.rpc('match_documents', {\n  query_embedding: embedding,\n  match_threshold: 0.78,\n  match_count: 10,\n})`
-    },
+    database: `// Crie um cliente para se conectar ao seu Pitchutcha DB
+import { createClient } from '@pitchutcha/pitchutcha-js'
+const pitchutcha = createClient(pitchutchaUrl, pitchutchaKey)
+
+// Obtenha dados da sua tabela 'paises'
+const { data, error } = await pitchutcha
+  .from('paises')
+  .select()`,
+    auth: `// Crie um novo usuário
+const { data, error } = await pitchutcha.auth.signUp({
+  email: 'example@email.com',
+  password: 'example-password',
+})
+
+// Faça login com um usuário existente
+const { data, error } = await pitchutcha.auth.signInWithPassword({
+  email: 'example@email.com',
+  password: 'example-password',
+})`,
+    storage: `// Faça upload de um arquivo para um bucket
+const { data, error } = await pitchutcha
+  .storage
+  .from('avatares')
+  .upload('public/avatar1.png', file)
+
+// Faça o download de um arquivo
+const { data, error } = await pitchutcha
+  .storage
+  .from('avatares')
+  .download('public/avatar1.png')`,
+    edge_functions: `import { serve } from 'https://deno.land/std/http/server.ts'
+
+serve(async (req) => {
+  const { name } = await req.json()
+  const data = {
+    message: \`Olá \${name}!\`,
+  }
+
+  return new Response(
+    JSON.stringify(data),
+    { headers: { "Content-Type": "application/json" } },
+  )
+})`,
+    realtime: `// Ouça mudanças em tempo real
+const canal = pitchutcha.channel('qualquer')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'mensagens' },
+    (payload) => {
+      console.log('Mudança recebida!', payload)
+    }
+  )
+  .subscribe()`,
+    vector: `// Gere embeddings
+const { data, error } = await pitchutcha.functions.invoke('embed', {
+  inputText: 'Olá Mundo'
+})
+
+// Faça uma busca por similaridade
+const { data, error } = await pitchutcha.rpc('match_documents', {
+  query_embedding: embedding,
+  match_threshold: 0.78,
+  match_count: 10,
+})`,
 };
 
 
@@ -138,7 +121,7 @@ const InteractiveCode: React.FC = () => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(codeSamples[activeFeature].text);
+        navigator.clipboard.writeText(codeSamples[activeFeature]);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -184,91 +167,10 @@ const InteractiveCode: React.FC = () => {
                     >
                         {copied ? <ClipboardCheckIcon className="h-5 w-5 text-green-400" /> : <ClipboardIcon className="h-5 w-5" />}
                     </button>
-                    <SyntaxHighlighter code={codeSamples[activeFeature].jsx} />
+                    <SyntaxHighlighter code={codeSamples[activeFeature]} />
                 </div>
             </div>
         </div>
-    );
-};
-
-const Header: React.FC<{ setIsCommandMenuOpen: (isOpen: boolean) => void; navigate: (path: string) => void; }> = ({ setIsCommandMenuOpen, navigate }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-    
-    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-        e.preventDefault();
-        navigate(path);
-        setIsOpen(false); // Close mobile menu on navigation
-    };
-
-    const navLinks = [
-        { name: 'Database', href: '/database' },
-        { name: 'Desenvolvedores', href: '/developers' },
-        { name: 'Preços', href: '/pricing' },
-        { name: 'Docs', href: '/docs' },
-        { name: 'Blog', href: '/blog' },
-    ];
-
-    return (
-        <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-[#111111]/80 backdrop-blur-lg border-b border-zinc-800' : 'border-b border-transparent'}`}>
-            <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center space-x-8">
-                        <a href="/" onClick={(e) => handleNavClick(e, '/')} className="flex items-center space-x-2 text-xl font-bold">
-                            <PitchutchaLogo className="h-7 w-7" />
-                            <span>Pitchutcha</span>
-                        </a>
-                        <nav className="hidden md:flex items-center space-x-6">
-                            {navLinks.map(link => (
-                                <a key={link.name} href={link.href} onClick={(e) => handleNavClick(e, link.href)} className="flex items-center text-sm text-zinc-300 hover:text-white transition-colors">
-                                    {link.name}
-                                </a>
-                            ))}
-                        </nav>
-                    </div>
-                    <div className="hidden md:flex items-center space-x-4">
-                         <button 
-                            onClick={() => setIsCommandMenuOpen(true)}
-                            className="flex items-center text-sm px-3 py-1.5 border border-zinc-700 rounded-md hover:bg-zinc-800 transition-colors text-zinc-400"
-                            aria-label="Abrir menu de pesquisa"
-                        >
-                            <SearchIcon className="h-4 w-4 mr-2" />
-                            Pesquisar...
-                            <span className="ml-3 text-xs border border-zinc-600 px-1.5 py-0.5 rounded">⌘K</span>
-                        </button>
-                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center text-sm px-3 py-1.5 border border-zinc-700 rounded-md hover:bg-zinc-800 transition-colors">
-                            <GitHubIcon className="h-4 w-4 mr-2" />
-                            Star no GitHub
-                            <span className="ml-2 bg-zinc-700 text-xs px-1.5 py-0.5 rounded-full">123k</span>
-                        </a>
-                        <a href="#" className="text-sm text-zinc-300 hover:text-white transition-colors">Entrar</a>
-                        <a href="#" className="bg-green-500 text-white text-sm px-4 py-2 rounded-md hover:bg-green-600 transition-colors">Comece seu projeto</a>
-                    </div>
-                    <div className="md:hidden">
-                        <button onClick={() => setIsOpen(!isOpen)}>
-                            {isOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {isOpen && (
-                 <div className="md:hidden bg-[#1c1c1c] p-4 space-y-4">
-                     {navLinks.map(link => (
-                         <a key={link.name} href={link.href} onClick={(e) => handleNavClick(e, link.href)} className="block text-zinc-300 hover:text-white">{link.name}</a>
-                     ))}
-                     <a href="#" className="block bg-green-500 text-white text-center px-4 py-2 rounded-md hover:bg-green-600 transition-colors">Comece seu projeto</a>
-                     <a href="#" className="block text-center text-zinc-300 hover:text-white transition-colors">Entrar</a>
-                 </div>
-            )}
-        </header>
     );
 };
 
@@ -284,7 +186,7 @@ const HeroProductGrid: React.FC<{ navigate: (path: string) => void }> = ({ navig
             {products.map((p, i) => (
                 <AnimatedSection key={p.name} delay={100 * i}>
                      <a 
-                        href={p.href}
+                        href={p.href.startsWith('/') ? `#${p.href}` : p.href}
                         onClick={(e) => {
                             if (p.href.startsWith('/')) {
                                 e.preventDefault();
@@ -331,13 +233,13 @@ const HeroSection: React.FC<{ navigate: (path: string) => void }> = ({ navigate 
                         Escale para milhões
                     </h1>
                     <p className="mt-6 max-w-2xl mx-auto text-lg text-zinc-400">
-                        Pitchutcha é uma alternativa de código aberto ao Firebase. Estamos construindo as funcionalidades do Firebase usando ferramentas de código aberto de nível empresarial.
+                        Pitchutcha é uma alternativa de código aberta ao Firebase. Estamos construindo as funcionalidades do Firebase usando ferramentas de código aberto de nível empresarial.
                     </p>
                     <div className="mt-8 flex justify-center items-center space-x-4">
                         <a href="#" className="bg-green-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-600 transition-transform hover:scale-105 shadow-lg shadow-green-500/20">
                             Comece seu projeto
                         </a>
-                        <a href="#" className="flex items-center bg-zinc-800/80 border border-zinc-700 text-white px-6 py-3 rounded-md font-semibold hover:bg-zinc-700/80 transition-transform hover:scale-105">
+                        <a href="#/docs" onClick={(e) => { e.preventDefault(); navigate('/docs'); }} className="flex items-center bg-zinc-800/80 border border-zinc-700 text-white px-6 py-3 rounded-md font-semibold hover:bg-zinc-700/80 transition-transform hover:scale-105">
                             Documentação <ArrowRightIcon className="ml-2 h-4 w-4" />
                         </a>
                     </div>
@@ -367,16 +269,19 @@ const LogosSection: React.FC = () => (
     </AnimatedSection>
 );
 
-const features = [
-    { icon: <DatabaseIcon />, name: 'Database', description: 'Banco de dados Postgres completo com extensões poderosas.', points: ['RLS', 'Backups', 'Extensões'] },
-    { icon: <AuthIcon />, name: 'Authentication', description: 'Adicione login social, de senha e sem senha a qualquer aplicativo.', points: ['Provedores', 'Controle de Acesso', 'Segurança'] },
-    { icon: <StorageIcon />, name: 'Storage', description: 'Armazene, organize e sirva arquivos grandes com permissões.', points: ['CDN', 'Transformações', 'Permissões'] },
-    { icon: <EdgeFunctionsIcon />, name: 'Edge Functions', description: 'Execute sua lógica de negócios globalmente perto de seus usuários.', points: ['Deno', 'Global', 'Secrets'] },
-    { icon: <RealtimeIcon />, name: 'Realtime', description: 'Construa aplicativos colaborativos e em tempo real com facilidade.', points: ['Broadcast', 'Presence', 'Postgres Changes'] },
-    { icon: <VectorIcon />, name: 'Vector', description: 'Integre embeddings e construa aplicativos de IA com facilidade.', points: ['pg_vector', 'Embeddings', 'Busca por similaridade'] },
+const featuresList = [
+    { key: 'database', icon: <DatabaseIcon />, name: 'Database', description: 'Banco de dados Postgres completo com extensões poderosas.', points: ['RLS', 'Backups', 'Extensões'] },
+    { key: 'auth', icon: <AuthIcon />, name: 'Authentication', description: 'Adicione login social, de senha e sem senha a qualquer aplicativo.', points: ['Provedores', 'Controle de Acesso', 'Segurança'] },
+    { key: 'storage', icon: <StorageIcon />, name: 'Storage', description: 'Armazene, organize e sirva arquivos grandes com permissões.', points: ['CDN', 'Transformações', 'Permissões'] },
+    { key: 'edge_functions', icon: <EdgeFunctionsIcon />, name: 'Edge Functions', description: 'Execute sua lógica de negócios globalmente perto de seus usuários.', points: ['Deno', 'Global', 'Secrets'] },
+    { key: 'realtime', icon: <RealtimeIcon />, name: 'Realtime', description: 'Construa aplicativos colaborativos e em tempo real com facilidade.', points: ['Broadcast', 'Presence', 'Postgres Changes'] },
+    { key: 'vector', icon: <VectorIcon />, name: 'Vector', description: 'Integre embeddings e construa aplicativos de IA com facilidade.', points: ['pg_vector', 'Embeddings', 'Busca por similaridade'] },
 ];
 
-const FeaturesSection: React.FC = () => (
+const FeaturesSection: React.FC = () => {
+    const [activeFeature, setActiveFeature] = useState(featuresList[0]);
+
+    return (
     <section className="py-20">
         <div className="container mx-auto px-4">
             <AnimatedSection className="text-center max-w-2xl mx-auto">
@@ -386,33 +291,56 @@ const FeaturesSection: React.FC = () => (
                 </p>
             </AnimatedSection>
 
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {features.map((feature, i) => (
-                    <AnimatedSection key={feature.name} delay={i * 100}>
-                        <div className="group relative h-full">
-                           <div className="gradient-border absolute inset-0 rounded-xl"></div>
-                            <div className="relative p-8 bg-[#1c1c1c] rounded-lg h-full flex flex-col">
-                                <div className="flex items-center space-x-3">
-                                    {React.cloneElement(feature.icon, { className: 'h-6 w-6 text-green-400 group-hover:scale-110 transition-transform duration-300' })}
-                                    <h3 className="text-xl font-semibold">{feature.name}</h3>
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
+                <AnimatedSection className="md:col-span-1 space-y-2">
+                    {featuresList.map((feature) => (
+                        <button
+                            key={feature.key}
+                            onClick={() => setActiveFeature(feature)}
+                            className={`w-full p-4 text-left rounded-lg transition-all duration-300 ${activeFeature.key === feature.key ? 'bg-[#1c1c1c] border border-zinc-700 shadow-lg scale-105' : 'hover:bg-zinc-900/50'}`}
+                        >
+                            <div className="flex items-center space-x-4">
+                                {React.cloneElement(feature.icon, { className: `h-7 w-7 transition-colors ${activeFeature.key === feature.key ? 'text-green-400' : 'text-zinc-500'}` })}
+                                <div>
+                                    <h3 className={`text-lg font-semibold transition-colors ${activeFeature.key === feature.key ? 'text-white' : 'text-zinc-300'}`}>{feature.name}</h3>
                                 </div>
-                                <p className="mt-3 text-zinc-400 flex-grow">{feature.description}</p>
-                                <div className="mt-4 space-y-2">
-                                    {feature.points.map(point => (
+                            </div>
+                        </button>
+                    ))}
+                </AnimatedSection>
+                <AnimatedSection className="md:col-span-2">
+                    <div className="bg-[#1c1c1c] rounded-lg border border-zinc-800 p-8 min-h-[300px] sticky top-24">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeFeature.key}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <div className="flex items-center space-x-4 mb-4">
+                                    {React.cloneElement(activeFeature.icon, { className: 'h-8 w-8 text-green-400' })}
+                                    <h3 className="text-2xl font-bold">{activeFeature.name}</h3>
+                                </div>
+                                <p className="text-zinc-400">{activeFeature.description}</p>
+                                <div className="mt-6 grid grid-cols-2 gap-4">
+                                    {activeFeature.points.map(point => (
                                         <div key={point} className="flex items-center text-sm text-zinc-300">
-                                            <CheckIcon className="h-4 w-4 mr-2 text-green-500" />
+                                            <CheckIcon className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
                                             <span>{point}</span>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        </div>
-                    </AnimatedSection>
-                ))}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+                </AnimatedSection>
             </div>
         </div>
     </section>
-);
+    );
+};
+
 
 const CompareSection: React.FC = () => {
     const comparisonData = [
@@ -450,6 +378,52 @@ const CompareSection: React.FC = () => {
                         ))}
                     </div>
                 </AnimatedSection>
+            </div>
+        </section>
+    );
+};
+
+const DeveloperWorkflowSection: React.FC = () => {
+    const steps = [
+        {
+            icon: <CodeBracketSquareIcon />,
+            name: "Desenvolva Localmente",
+            description: "Use nossa CLI para replicar o ambiente da nuvem em sua máquina, com recarregamento instantâneo e paridade total."
+        },
+        {
+            icon: <TableCellsIcon />,
+            name: "Gerencie no Painel",
+            description: "Gerencie seu banco de dados, usuários e arquivos através de uma interface intuitiva, sem precisar sair do navegador."
+        },
+        {
+            icon: <GlobeAltIcon />,
+            name: "Implante Globalmente",
+            description: "Faça o deploy para nossa infraestrutura global com um único comando e garanta baixa latência para seus usuários."
+        }
+    ];
+
+    return (
+        <section className="py-20">
+            <div className="container mx-auto px-4">
+                <AnimatedSection className="text-center max-w-2xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Um fluxo de trabalho completo</h2>
+                    <p className="mt-4 text-lg text-zinc-400">
+                        Da sua máquina local para uma implantação global. Nós fornecemos as ferramentas para você ser produtivo em cada etapa do caminho.
+                    </p>
+                </AnimatedSection>
+                <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {steps.map((step, i) => (
+                        <AnimatedSection key={step.name} delay={i * 100}>
+                            <div className="p-8 bg-[#1c1c1c] border border-zinc-800 rounded-lg text-center h-full">
+                                <div className="inline-block p-4 bg-green-500/10 rounded-full mb-4">
+                                    {React.cloneElement(step.icon, { className: 'h-8 w-8 text-green-400' })}
+                                </div>
+                                <h3 className="text-xl font-semibold">{step.name}</h3>
+                                <p className="mt-2 text-zinc-400">{step.description}</p>
+                            </div>
+                        </AnimatedSection>
+                    ))}
+                </div>
             </div>
         </section>
     );
@@ -682,6 +656,160 @@ const PricingSection: React.FC = () => {
     );
 }
 
+const ShowcaseSection: React.FC = () => {
+    type ShowcaseKey = 'saas' | 'ai' | 'ecommerce';
+    const [activeShowcase, setActiveShowcase] = useState<ShowcaseKey>('saas');
+
+    const SaaSVisual: React.FC = () => {
+        const [highlightedRow, setHighlightedRow] = useState(1);
+        useEffect(() => {
+            const interval = setInterval(() => {
+                setHighlightedRow(prev => (prev % 3) + 1);
+            }, 1500);
+            return () => clearInterval(interval);
+        }, []);
+        return (
+            <div className="font-mono text-xs text-zinc-400 p-4 bg-zinc-900 rounded">
+                <p className="text-green-400">&gt; select * from subscriptions;</p>
+                <div className="mt-2 text-zinc-300">
+                    <p>user_id | plan | status</p>
+                    <p>-------------------------</p>
+                    <p className={`transition-colors ${highlightedRow === 1 ? 'text-white bg-green-500/20' : ''}`}>user_a | free | active</p>
+                    <p className={`transition-colors ${highlightedRow === 2 ? 'text-white bg-green-500/20' : ''}`}>user_b | pro | active</p>
+                    <p className={`transition-colors ${highlightedRow === 3 ? 'text-white bg-green-500/20' : ''}`}>user_c | free | canceled</p>
+                </div>
+            </div>
+        );
+    };
+
+    const AiVisual: React.FC = () => (
+        <div className="w-full h-full flex items-center justify-center p-4">
+            <svg viewBox="0 0 100 60" className="w-full h-auto">
+                <defs><style>{`.query-dot { animation: pulse 2s infinite; } @keyframes pulse { 0%, 100% { r: 3; opacity: 1; } 50% { r: 4; opacity: 0.7; } } .match-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw-line 1.5s ease-out forwards; animation-delay: var(--delay); } @keyframes draw-line { to { stroke-dashoffset: 0; } }`}</style></defs>
+                <circle cx="10" cy="30" r="3" fill="#34d399" className="query-dot" />
+                <text x="10" y="42" fill="#34d399" fontSize="6" textAnchor="middle">Sua Pergunta</text>
+                <circle cx="50" cy="15" r="2.5" fill="#a1a1aa" /><circle cx="60" cy="45" r="2.5" fill="#a1a1aa" /><circle cx="90" cy="30" r="2.5" fill="#a1a1aa" />
+                <circle cx="45" cy="25" r="2.5" fill="#71717a" /><circle cx="75" cy="10" r="2.5" fill="#71717a" /><circle cx="80" cy="50" r="2.5" fill="#71717a" />
+                <path d="M 10 30 L 50 15" stroke="#34d399" strokeWidth="0.5" fill="none" className="match-line" style={{'--delay': '0s'} as React.CSSProperties} />
+                <path d="M 10 30 L 60 45" stroke="#34d399" strokeWidth="0.5" fill="none" className="match-line" style={{'--delay': '0.2s'} as React.CSSProperties}/>
+                <path d="M 10 30 L 45 25" stroke="#34d399" strokeWidth="0.5" fill="none" className="match-line" style={{'--delay': '0.4s'} as React.CSSProperties}/>
+            </svg>
+        </div>
+    );
+    
+    const EcommerceVisual: React.FC = () => {
+        const [stock, setStock] = useState(12);
+        useEffect(() => {
+            const interval = setInterval(() => {
+                setStock(prev => (prev > 0 ? prev - 1 : 12));
+            }, 2000);
+            return () => clearInterval(interval);
+        }, []);
+        return (
+            <div className="p-4 bg-zinc-900 rounded-lg border border-zinc-700/50">
+                <p className="font-semibold text-white">Fones de Ouvido Incríveis</p>
+                <p className="text-sm text-zinc-400">Áudio de alta fidelidade</p>
+                <div className="mt-2 text-lg font-bold text-white flex justify-between items-center">
+                    <span>$99.99</span>
+                    <span key={stock} className="text-sm bg-green-500/20 text-green-300 px-2 py-1 rounded-md animate-[fadeIn_0.5s]">
+                        {stock} em estoque
+                    </span>
+                </div>
+            </div>
+        );
+    };
+
+    const showcases = {
+        saas: {
+            icon: <RocketLaunchIcon />,
+            name: "Starter para SaaS",
+            description: "Construa um SaaS completo com autenticação, assinaturas e permissões baseadas em RLS.",
+            code: `-- Permitir que usuários leiam faturas de sua própria equipe
+CREATE POLICY "select_own_team_invoices"
+ON invoices FOR SELECT
+USING ( team_id = get_current_team_id() );`,
+            visual: <SaaSVisual/>
+        },
+        ai: {
+            icon: <ChatBubbleLeftRightIcon />,
+            name: "Chatbot com IA",
+            description: "Use embeddings vetoriais para criar um chatbot que responde perguntas com base em seus documentos.",
+            code: `-- Encontre documentos similares a uma pergunta
+SELECT content
+FROM documents
+ORDER BY embedding <=> query_embedding
+LIMIT 5;`,
+             visual: <AiVisual/>
+        },
+        ecommerce: {
+            icon: <ShoppingCartIcon />,
+            name: "Backend de E-commerce",
+            description: "Gerencie produtos, pedidos e inventário em tempo real com o poder do Postgres e Realtime.",
+            code: `-- Ouça mudanças no estoque de produtos
+const channel = pitchutcha
+  .channel('product_stock')
+  .on('postgres_changes', ...)
+  .subscribe();`,
+            visual: <EcommerceVisual/>
+        }
+    };
+
+    const ShowcaseButton = ({ showcaseKey, name, icon }: { showcaseKey: ShowcaseKey, name: string, icon: JSX.Element }) => (
+        <button
+            onClick={() => setActiveShowcase(showcaseKey)}
+            className={`flex items-center space-x-3 p-3 rounded-md transition-colors w-full text-left ${activeShowcase === showcaseKey ? 'bg-zinc-700/50 text-white' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'}`}
+        >
+            {React.cloneElement(icon, { className: 'h-6 w-6' })}
+            <span className="font-semibold">{name}</span>
+        </button>
+    );
+
+    return (
+        <section className="py-20 bg-[#1c1c1c] border-y border-zinc-800">
+            <div className="container mx-auto px-4">
+                <AnimatedSection className="text-center max-w-3xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Do Código à Produção em Minutos</h2>
+                    <p className="mt-4 text-lg text-zinc-400">
+                        Pitchutcha combina ferramentas de código aberto poderosas em um fluxo de trabalho unificado para acelerar o desenvolvimento de qualquer aplicação.
+                    </p>
+                </AnimatedSection>
+
+                <AnimatedSection className="mt-16 max-w-6xl mx-auto">
+                    <div className="bg-[#1a1a1a] rounded-lg border border-zinc-700/50 overflow-hidden shadow-2xl shadow-green-500/10">
+                        <div className="grid grid-cols-1 lg:grid-cols-3">
+                            <div className="p-4 space-y-2 border-b lg:border-b-0 lg:border-r border-zinc-700/50">
+                                {Object.entries(showcases).map(([key, value]) => (
+                                    <ShowcaseButton
+                                        key={key}
+                                        showcaseKey={key as ShowcaseKey}
+                                        name={value.name}
+                                        icon={value.icon}
+                                    />
+                                ))}
+                            </div>
+                            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2">
+                                <div className="p-6 font-mono text-sm border-b md:border-b-0 md:border-r border-zinc-700/50">
+                                    <h4 className="font-sans font-bold text-white mb-2">Código</h4>
+                                    <p className="font-sans text-xs text-zinc-400 mb-4">{showcases[activeShowcase].description}</p>
+                                    <SyntaxHighlighter code={showcases[activeShowcase].code} />
+                                </div>
+                                <div className="p-6 bg-zinc-900/30">
+                                    <h4 className="font-sans font-bold text-white mb-2">Resultado</h4>
+                                    <div className="mt-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50 h-48 flex items-center justify-center">
+                                       <div key={activeShowcase} className="w-full h-full animate-[fadeIn_0.5s_ease-in-out]">
+                                            {showcases[activeShowcase].visual}
+                                       </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </AnimatedSection>
+            </div>
+        </section>
+    );
+};
+
 const cliAnimationCommands = [
     'pitchutcha init',
     '✔ Project initialized.',
@@ -694,28 +822,68 @@ const cliAnimationCommands = [
 ];
 
 const CliAnimation: React.FC = () => {
-    const { lines, currentLine } = useTypingAnimation(cliAnimationCommands);
+    const outputRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const outputEl = outputRef.current;
+        if (!outputEl) return;
+
+        const ctx = gsap.context(() => {
+            const tl = gsap.timeline({
+                repeat: -1,
+                repeatDelay: 3,
+                onRepeat: () => {
+                    outputEl.innerHTML = '';
+                    const cursor = document.createElement('span');
+                    cursor.className = "h-4 w-2 bg-green-400 animate-blink ml-1";
+                    const line = document.createElement('div');
+                    line.className = 'flex items-center';
+                    line.innerHTML = `<span class="text-zinc-500 mr-2">$</span><span class="text-zinc-300" id="current-command"></span>`;
+                    line.appendChild(cursor);
+                    outputEl.appendChild(line);
+                }
+            });
+
+            tl.call(tl.vars.onRepeat);
+
+            cliAnimationCommands.forEach(command => {
+                const isSuccess = command.startsWith('✔');
+                
+                if (isSuccess) {
+                     tl.call(() => {
+                        const line = document.createElement('div');
+                        line.className = 'text-green-400';
+                        line.textContent = command;
+                        outputEl.insertBefore(line, outputEl.lastChild);
+                     }).to({}, {duration: 0.3}); // Pause
+                } else {
+                    tl.to("#current-command", {
+                        duration: command.length * 0.08,
+                        text: command,
+                        ease: 'none'
+                    }, '+=0.5').call(() => {
+                        const line = document.createElement('div');
+                        line.className = 'flex items-center';
+                        line.innerHTML = `<span class="text-zinc-500 mr-2">$</span><span class="text-zinc-300">${command}</span>`;
+                        outputEl.insertBefore(line, outputEl.lastChild);
+                        gsap.set("#current-command", { text: '' });
+                    });
+                }
+            });
+
+        }, outputRef);
+        
+        return () => ctx.revert();
+    }, []);
 
     return (
         <div className="bg-[#1c1c1c] rounded-lg border border-zinc-700/50 overflow-hidden shadow-2xl shadow-green-500/10 font-mono text-sm p-6 min-h-[250px]">
-            {lines.map((line, index) => (
-                <div key={index} className="flex items-center">
-                    <span className={`mr-2 ${line.startsWith('✔') ? 'text-green-400' : 'text-zinc-500'}`}>{line.startsWith('✔') ? '' : '$'}</span>
-                    <span className={line.startsWith('✔') ? 'text-green-400' : 'text-zinc-300'}>{line}</span>
-                </div>
-            ))}
-            {currentLine && (
-                 <div className="flex items-center">
-                    <span className="text-zinc-500 mr-2">$</span>
-                    <span className="text-zinc-300">{currentLine}</span>
-                    <span className="h-4 w-2 bg-green-400 animate-blink ml-1"></span>
-                </div>
-            )}
+           <div ref={outputRef}></div>
         </div>
     );
 };
 
-const CliSection: React.FC = () => (
+const CliSection: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
     <section className="py-20">
         <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -731,7 +899,7 @@ const CliSection: React.FC = () => (
                         <a href="#" className="bg-green-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-600 transition-transform hover:scale-105">
                             Explorar a CLI
                         </a>
-                        <a href="#" className="flex items-center text-zinc-300 hover:text-white transition-colors">
+                        <a href="#/docs/project-setup" onClick={(e) => { e.preventDefault(); navigate('/docs/project-setup'); }} className="flex items-center text-zinc-300 hover:text-white transition-colors">
                             Ler a documentação <ArrowRightIcon className="ml-2 h-4 w-4" />
                         </a>
                     </div>
@@ -741,132 +909,161 @@ const CliSection: React.FC = () => (
     </section>
 );
 
-const MadeWithPitchutchaSection: React.FC = () => {
-    const logos = [
-        <VercelLogo />, <StripeLogo />, <DiscordLogo />, <NotionLogo />, <GitHubIcon />, <NextLogo />
+const LivePlaygroundSection: React.FC = () => {
+    type Scenario = 'query' | 'insert' | 'secure' | 'reset';
+    const initialData = [
+        { id: 1, username: 'ada', text: 'Olá, mundo!', timestamp: '2 minutos atrás', isNew: false },
+        { id: 2, username: 'grace', text: 'Realtime é incrível.', timestamp: '1 minuto atrás', isNew: false },
     ];
-    // Duplicate logos for a seamless loop
-    const extendedLogos = [...logos, ...logos, ...logos, ...logos];
+    
+    const [commandInput, setCommandInput] = useState('SELECT * FROM messages;');
+    const [commandHistory, setCommandHistory] = useState<{ command: string; output: string }[]>([]);
+    const [tableData, setTableData] = useState(initialData);
+    const [isRlsActive, setIsRlsActive] = useState(false);
+    const [realtimeNotif, setRealtimeNotif] = useState({ show: false, text: '' });
+    const [activeScenario, setActiveScenario] = useState<Scenario>('query');
 
-    return (
-        <section className="py-20">
-            <div className="container mx-auto px-4">
-                <AnimatedSection className="text-center max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Confiado por milhões</h2>
-                    <p className="mt-4 text-lg text-zinc-400">
-                        Pitchutcha é a base para startups, empresas da Fortune 500 e qualquer projeto que queira se mover mais rápido sem sacrificar a escalabilidade.
-                    </p>
-                </AnimatedSection>
-                <div className="mt-16 relative w-full overflow-hidden mask-gradient">
-                     <div className="flex animate-marquee">
-                        {extendedLogos.map((Logo, index) => (
-                            <div key={index} className="flex-shrink-0 mx-8 text-zinc-500 hover:text-white transition-colors">
-                                {React.cloneElement(Logo, { className: 'h-8' })}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-};
-
-const Footer: React.FC = () => {
-    const footerLinks = {
-        Produto: ['Database', 'Auth', 'Functions', 'Realtime', 'Storage', 'Vector'],
-        Recursos: ['Suporte', 'Preços', 'Tornar-se um Parceiro', 'Integrações', 'Experts'],
-        Desenvolvedores: ['Documentação', 'API Reference', 'Guias', 'Código Aberto', 'System Status'],
-        Empresa: ['Blog', 'Carreiras', 'Suporte', 'Termos de Serviço'],
+    const scenarios: { key: Scenario; name: string; command: string; description: string }[] = [
+        { key: 'query', name: '1. Consultar Dados', command: 'SELECT * FROM messages;', description: 'Busque dados usando SQL.' },
+        { key: 'insert', name: '2. Inserir em Tempo Real', command: "INSERT INTO messages (username, text) VALUES ('você', 'Funciona!');", description: 'Adicione dados e veja a UI atualizar instantaneamente.' },
+        { key: 'secure', name: '3. Proteger com RLS', command: "ENABLE RLS FOR messages WHERE username = 'você';", description: 'Aplique políticas de segurança para filtrar o acesso aos dados.' },
+        { key: 'reset', name: '4. Resetar', command: "RESET_DEMO;", description: 'Reinicie a demonstração para o estado inicial.' },
+    ];
+    
+    const handleCommandSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        
+        let output = '✔ Comando executado com sucesso.';
+        
+        if (commandInput.toUpperCase().startsWith('SELECT')) {
+            // Apenas um efeito visual, os dados já estão lá
+        } else if (commandInput.toUpperCase().startsWith('INSERT')) {
+            const newData = { id: Date.now(), username: 'você', text: 'Funciona!', timestamp: 'agora', isNew: true };
+            setTableData(prev => [...prev, newData]);
+            setRealtimeNotif({ show: true, text: 'Nova mensagem recebida!' });
+            setTimeout(() => setRealtimeNotif({ show: false, text: '' }), 3000);
+            setTimeout(() => setTableData(prev => prev.map(d => ({...d, isNew: false}))), 1000);
+        } else if (commandInput.toUpperCase().startsWith('ENABLE RLS')) {
+            setIsRlsActive(true);
+        } else if (commandInput.toUpperCase().startsWith('RESET_DEMO')) {
+             setTableData(initialData);
+             setIsRlsActive(false);
+             setCommandHistory([]);
+             setCommandInput('SELECT * FROM messages;');
+             setActiveScenario('query');
+             return;
+        } else {
+             output = "❌ Erro: Comando não reconhecido nesta demo."
+        }
+        
+        setCommandHistory(prev => [...prev, { command: commandInput, output }]);
+        setCommandInput('');
     };
 
-    return (
-        <footer className="border-t border-zinc-800 py-16">
-            <div className="container mx-auto px-4">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-                    <div className="col-span-2 md:col-span-1">
-                         <a href="#" className="flex items-center space-x-2 text-xl font-bold">
-                            <PitchutchaLogo className="h-7 w-7" />
-                            <span>Pitchutcha</span>
-                        </a>
-                        <p className="mt-4 text-sm text-zinc-400">&copy; {new Date().getFullYear()} Pitchutcha. Todos os direitos reservados.</p>
-                    </div>
-
-                    {Object.entries(footerLinks).map(([title, links]) => (
-                        <div key={title}>
-                            <h4 className="font-semibold text-white">{title}</h4>
-                            <ul className="mt-4 space-y-3">
-                                {links.map(link => (
-                                    <li key={link}><a href="#" className="text-sm text-zinc-400 hover:text-white transition-colors">{link}</a></li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </footer>
-    );
-};
-
-const CommandMenu: React.FC<{ isOpen: boolean; setIsOpen: (isOpen: boolean) => void }> = ({ isOpen, setIsOpen }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const commandMenuRef = useRef<HTMLDivElement>(null);
-
-    const commands = [
-        { name: 'Documentação', icon: <BookOpenIcon/>, href: '#' },
-        { name: 'Preços', icon: <TagIcon/>, href: '#' },
-        { name: 'Começar um Projeto', icon: <SparklesIcon/>, href: '#' },
-        { name: 'Referência da CLI', icon: <CommandLineIcon/>, href: '#'},
-        { name: 'Status do Sistema', icon: <GlobeAltIcon/>, href: '#'},
-    ];
-
-    const filteredCommands = commands.filter(cmd => cmd.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (commandMenuRef.current && !commandMenuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
+    const handleScenarioClick = (scenario: (typeof scenarios)[0]) => {
+        setActiveScenario(scenario.key);
+        setCommandInput(scenario.command);
+        if(scenario.key === 'reset'){
+             handleCommandSubmit();
         }
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen, setIsOpen]);
-
-    if (!isOpen) return null;
+    };
+    
+    const displayedData = isRlsActive ? tableData.filter(d => d.username === 'você') : tableData;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
-            <div ref={commandMenuRef} className="bg-[#1c1c1c] w-full max-w-xl rounded-lg border border-zinc-800 shadow-2xl shadow-black/50 transform transition-all duration-300 opacity-100 scale-100">
-                <div className="p-2 border-b border-zinc-800 flex items-center">
-                    <SearchIcon className="h-5 w-5 text-zinc-500 mx-2" />
-                    <input
-                        type="text"
-                        placeholder="Pesquisar documentação ou navegar..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-transparent outline-none text-white placeholder-zinc-500"
-                        autoFocus
-                    />
-                </div>
-                <ul className="p-2 max-h-[300px] overflow-y-auto">
-                    {filteredCommands.length > 0 ? (
-                        filteredCommands.map(cmd => (
-                            <li key={cmd.name}>
-                                <a href={cmd.href} className="flex items-center p-2 rounded-md text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors">
-                                    {React.cloneElement(cmd.icon, { className: "h-5 w-5 mr-3 text-zinc-500" })}
-                                    {cmd.name}
-                                </a>
-                            </li>
-                        ))
-                    ) : (
-                        <p className="p-4 text-center text-zinc-500">Nenhum resultado encontrado.</p>
-                    )}
-                </ul>
+        <section className="py-20 bg-[#111111] border-y border-zinc-800">
+            <div className="container mx-auto px-4">
+                <AnimatedSection className="text-center max-w-3xl mx-auto">
+                    <div className="inline-block p-3 bg-green-500/10 rounded-full mb-4">
+                        <CubeTransparentIcon className="h-8 w-8 text-green-400" />
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Plataforma Unificada em Ação</h2>
+                    <p className="mt-4 text-lg text-zinc-400">
+                        Experimente a sinergia entre Banco de Dados, Tempo Real e Segurança. Execute comandos e veja os resultados acontecerem ao vivo.
+                    </p>
+                </AnimatedSection>
+                
+                <AnimatedSection className="mt-16 max-w-6xl mx-auto">
+                    <div className="bg-[#1c1c1c] rounded-lg border border-zinc-700/50 shadow-2xl shadow-green-500/10 overflow-hidden">
+                       <div className="grid grid-cols-1 lg:grid-cols-2">
+                           {/* Left: Controls & CLI */}
+                           <div className="p-6 border-b lg:border-b-0 lg:border-r border-zinc-700/50 flex flex-col">
+                               <div className="space-y-2 mb-4">
+                                   {scenarios.map(s => (
+                                       <button key={s.key} onClick={() => handleScenarioClick(s)} className={`w-full text-left p-3 rounded-md transition-colors ${activeScenario === s.key ? 'bg-green-500/20' : 'hover:bg-zinc-800/50'}`}>
+                                           <p className={`font-semibold ${activeScenario === s.key ? 'text-green-300' : 'text-white'}`}>{s.name}</p>
+                                           <p className={`text-sm ${activeScenario === s.key ? 'text-green-400/80' : 'text-zinc-400'}`}>{s.description}</p>
+                                       </button>
+                                   ))}
+                               </div>
+                               <div className="bg-[#111] font-mono text-sm p-4 rounded-lg flex-grow border border-zinc-800/50 h-64 overflow-y-auto">
+                                   {commandHistory.map((item, i) => (
+                                       <div key={i} className="mb-2">
+                                           <div className="flex items-center">
+                                                <span className="text-zinc-500 mr-2">$</span>
+                                                <span className="text-zinc-300">{item.command}</span>
+                                           </div>
+                                           <p className={`${item.output.startsWith('❌') ? 'text-red-400' : 'text-green-400'}`}>{item.output}</p>
+                                       </div>
+                                   ))}
+                                   <form onSubmit={handleCommandSubmit} className="flex items-center">
+                                        <span className="text-zinc-500 mr-2">$</span>
+                                        <input
+                                            type="text"
+                                            value={commandInput}
+                                            onChange={e => setCommandInput(e.target.value)}
+                                            className="bg-transparent w-full outline-none text-zinc-300"
+                                            placeholder="Digite um comando..."
+                                        />
+                                        <span className="h-4 w-2 bg-green-400 animate-blink ml-1"></span>
+                                   </form>
+                               </div>
+                           </div>
+                           {/* Right: Data Visualizer */}
+                           <div className="p-6 relative">
+                               <div className="flex justify-between items-center mb-2">
+                                   <h4 className="font-semibold text-white">Tabela: `messages`</h4>
+                                   {isRlsActive && (
+                                       <span className="flex items-center text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded-full">
+                                            <ShieldCheckIcon className="h-4 w-4 mr-1.5"/>
+                                            RLS Ativada
+                                       </span>
+                                   )}
+                               </div>
+                               <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg min-h-[300px] overflow-x-auto">
+                                   <table className="w-full text-left text-sm">
+                                        <thead>
+                                            <tr className="border-b border-zinc-700 text-zinc-400">
+                                                <th className="p-2 font-medium">id</th>
+                                                <th className="p-2 font-medium">username</th>
+                                                <th className="p-2 font-medium">text</th>
+                                                <th className="p-2 font-medium">timestamp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {displayedData.map(row => (
+                                                <tr key={row.id} className={`transition-all duration-500 ${row.isNew ? 'bg-green-500/20' : ''}`}>
+                                                    <td className="p-2 font-mono text-zinc-500">{row.id.toString().slice(-4)}</td>
+                                                    <td className="p-2">{row.username}</td>
+                                                    <td className="p-2">{row.text}</td>
+                                                    <td className="p-2 text-zinc-400">{row.timestamp}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                   </table>
+                               </div>
+                                {realtimeNotif.show && (
+                                    <div className="absolute bottom-8 right-8 flex items-center bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-lg shadow-lg animate-pulse">
+                                        <RealtimeIcon className="h-5 w-5 mr-2 text-green-400"/>
+                                        <span className="text-sm text-white">{realtimeNotif.text}</span>
+                                    </div>
+                                )}
+                           </div>
+                       </div>
+                    </div>
+                </AnimatedSection>
             </div>
-        </div>
+        </section>
     );
 };
 
@@ -876,14 +1073,16 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
         <HeroSection navigate={navigate} />
         <LogosSection />
         <FeaturesSection />
-        <CompareSection />
-        <ExtensionsSection />
+        <LivePlaygroundSection />
+        <DeveloperWorkflowSection />
+        <ShowcaseSection />
         <TemplatesSection />
+        <CompareSection />
         <GlobalSection />
+        <ExtensionsSection />
         <TestimonialsSection />
+        <CliSection navigate={navigate} />
         <PricingSection />
-        <MadeWithPitchutchaSection />
-        <CliSection />
         <CTASection />
     </>
 );
@@ -891,56 +1090,62 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
 
 // --- Main App Component ---
 const App: React.FC = () => {
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(window.location.pathname);
+  const getCurrentPath = () => window.location.hash.slice(1) || '/';
+  
+  const [currentPath, setCurrentPath] = useState(getCurrentPath());
 
   const navigate = (path: string) => {
-    window.history.pushState({}, '', path);
-    setCurrentPage(path);
+    window.location.hash = path;
     window.scrollTo(0, 0);
   };
   
   useEffect(() => {
-    const onPopState = () => setCurrentPage(window.location.pathname);
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
+    const onHashChange = () => {
+      setCurrentPath(getCurrentPath());
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+    };
   }, []);
 
   useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-          if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-              event.preventDefault();
-              setIsCommandMenuOpen(prev => !prev);
-          }
-          if (event.key === 'Escape') {
-              setIsCommandMenuOpen(false);
-          }
-      };
+    const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
 
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-          window.removeEventListener('keydown', handleKeyDown);
-      };
+    function raf(time: number) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
   }, []);
   
   const renderPage = () => {
-      switch (currentPage) {
+      if (currentPath.startsWith('/docs')) {
+        const docId = currentPath.split('/')[2];
+        if (docId) {
+            return <DocsPage activeTopic={docId} navigate={navigate} />;
+        }
+        return <DocsPortal navigate={navigate} />;
+      }
+
+      switch (currentPath) {
           case '/database':
               return <DatabasePage />;
+          case '/status':
+              return <StatusPage />;
           default:
               return <HomePage navigate={navigate} />;
       }
   };
 
   return (
-    <div className="min-h-screen">
-      <CommandMenu isOpen={isCommandMenuOpen} setIsOpen={setIsCommandMenuOpen} />
-      <Header setIsCommandMenuOpen={setIsCommandMenuOpen} navigate={navigate} />
-      <main>
-        {renderPage()}
-      </main>
-      <Footer />
-    </div>
+    <GlobalLayout navigate={navigate}>
+      {renderPage()}
+    </GlobalLayout>
   );
 };
 
